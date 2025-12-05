@@ -1,22 +1,31 @@
-# Linux Service Configuration Writeups
+# NCAE Linux Competition Tools
+
+> [!CAUTION]
+> These writeups are tailored for NCAE cybersecurity competitions and may not reflect production best practices.
+>
+> Focus is on speed and competition scenarios, not enterprise deployment.
 
 Quick reference guides for configuring services in Linux competitions. Assumes basic Linux knowledge (filesystem navigation, systemctl, ssh, etc.).
 
-## Writeups
+## The Layout
 
-0. **[Mini-Hack Quick Start](00-mini-hack-overview.md)** - Complete mini-hack walkthrough checklist
-1. **[Services Overview](01-services-overview.md)** - General approach to any service
-2. **[Apache Web Service](02-apache-web-service.md)** - HTTP/HTTPS server configuration
-3. **[SSH Service](03-ssh-service.md)** - Remote access, keys, security
-4. **[Network Configuration](04-network-configuration.md)** - Static IPs across different distros
-5. **[DNS, Rsync, Cron](05-dns-rsync-cron.md)** - Name resolution and automated backups
-6. **[UFW Firewall](06-ufw-firewall.md)** - Ubuntu firewall configuration
-7. **[Active Connection Defense](07-active-connection-defense.md)** - Monitor and kill malicious connections
-8. **[MikroTik Router](08-mikrotik-router.md)** - Router configuration (2025 competition)
+```bash
+~/ncae-tools
+├── 00-mini-hack-overview.md        # Complete mini-hack walkthrough checklist
+├── 01-services-overview.md         # General approach to any service
+├── 02-apache-web-service.md        # HTTP/HTTPS server configuration
+├── 03-ssh-service.md               # Remote access, keys, security
+├── 04-network-configuration.md     # Static IPs across different distros
+├── 05-dns-rsync-cron.md            # Name resolution and automated backups
+├── 06-ufw-firewall.md              # Ubuntu firewall configuration
+├── 07-active-connection-defense.md # Monitor and kill malicious connections
+└── 08-mikrotik-router.md           # Router configuration (2025 minitik)
+```
 
 ## Service-Specific Quick Reference
 
 ### Apache Service Names
+
 ```bash
 apache2      # Ubuntu/Debian/Kali
 httpd        # CentOS/RHEL
@@ -24,13 +33,14 @@ httpd        # CentOS/RHEL
 
 ### Network Configuration Files
 
-| Distribution | Config Location |
-|--------------|----------------|
-| Kali/Debian  | `/etc/network/interfaces` |
-| Ubuntu       | `/etc/netplan/*.yaml` |
+| Distribution | Config Location                          |
+| ------------ | ---------------------------------------- |
+| Kali/Debian  | `/etc/network/interfaces`                |
+| Ubuntu       | `/etc/netplan/*.yaml`                    |
 | CentOS/RHEL  | `/etc/sysconfig/network-scripts/ifcfg-*` |
 
 ### SSH Key Permissions
+
 ```bash
 chmod 700 ~/.ssh/
 chmod 600 ~/.ssh/id_rsa          # Private key
@@ -39,12 +49,14 @@ chmod 644 ~/.ssh/authorized_keys
 ```
 
 Regenerate host keys on cloned VMs:
+
 ```bash
 sudo ssh-keygen -A
 sudo systemctl restart sshd
 ```
 
 ### UFW Firewall
+
 ```bash
 sudo ufw enable
 sudo ufw allow ssh
@@ -56,6 +68,7 @@ sudo ufw delete 4                       # Delete rule by number
 ```
 
 ### Active Connection Monitoring
+
 ```bash
 sudo netstat -tunap                     # All connections with PIDs
 sudo netstat -tunap | grep ESTABLISHED  # Only active
@@ -65,7 +78,9 @@ sudo pkill -kill -u username            # Kill all user processes
 ```
 
 ### MikroTik Router
+
 **CLI**:
+
 ```bash
 /ip address print
 /ip address add address=192.168.1.1/24 interface=ether3
@@ -77,7 +92,9 @@ interface print
 Default login: `admin` / (blank password)
 
 ### Rsync + Cron
+
 **Rsync common patterns**:
+
 ```bash
 rsync -av source/ dest/                             # Basic sync
 rsync -av --delete source/ dest/                    # Mirror (delete extra files in dest)
@@ -87,6 +104,7 @@ rsync -av source/ dest/ --dry-run                   # Test without changes
 ```
 
 **Cron syntax**: `minute hour day month weekday command`
+
 ```
 0 2 * * * /path/to/backup.sh      # Daily at 2 AM
 */15 * * * * /path/to/script.sh   # Every 15 minutes
@@ -95,12 +113,12 @@ rsync -av source/ dest/ --dry-run                   # Test without changes
 
 ## Distribution Differences
 
-| Feature | Ubuntu | Kali | CentOS/RHEL |
-|---------|--------|------|-------------|
-| Apache service | `apache2` | `apache2` | `httpd` |
-| Network config | netplan YAML | interfaces | ifcfg-* scripts |
-| Firewall | UFW | iptables | firewall-cmd |
-| Cron service | `cron` | `cron` | `crond` |
+| Feature        | Ubuntu       | Kali       | CentOS/RHEL      |
+| -------------- | ------------ | ---------- | ---------------- |
+| Apache service | `apache2`    | `apache2`  | `httpd`          |
+| Network config | netplan YAML | interfaces | ifcfg-\* scripts |
+| Firewall       | UFW          | iptables   | firewall-cmd     |
+| Cron service   | `cron`       | `cron`     | `crond`          |
 
 **Router (2025)**: All distributions use MikroTik (replaces CentOS router)
 
@@ -117,13 +135,36 @@ rsync -av source/ dest/ --dry-run                   # Test without changes
 
 ## Critical Configuration Locations
 
-| Service | Config File(s) |
-|---------|---------------|
-| SSH | `/etc/ssh/sshd_config` |
-| Apache (Ubuntu) | `/etc/apache2/apache2.conf`, `/etc/apache2/sites-available/` |
-| Apache (CentOS) | `/etc/httpd/conf/httpd.conf`, `/etc/httpd/conf.d/` |
-| Network (Kali) | `/etc/network/interfaces` |
-| Network (Ubuntu) | `/etc/netplan/*.yaml` |
-| Network (CentOS) | `/etc/sysconfig/network-scripts/ifcfg-*` |
-| DNS resolution | `/etc/resolv.conf` |
-| Cron jobs | `crontab -e` (per-user), `/etc/crontab` (system-wide) |
+| Service          | Config File(s)                                               |
+| ---------------- | ------------------------------------------------------------ |
+| SSH              | `/etc/ssh/sshd_config`                                       |
+| Apache (Ubuntu)  | `/etc/apache2/apache2.conf`, `/etc/apache2/sites-available/` |
+| Apache (CentOS)  | `/etc/httpd/conf/httpd.conf`, `/etc/httpd/conf.d/`           |
+| Network (Kali)   | `/etc/network/interfaces`                                    |
+| Network (Ubuntu) | `/etc/netplan/*.yaml`                                        |
+| Network (CentOS) | `/etc/sysconfig/network-scripts/ifcfg-*`                     |
+| DNS resolution   | `/etc/resolv.conf`                                           |
+| Cron jobs        | `crontab -e` (per-user), `/etc/crontab` (system-wide)        |
+
+## Credits
+
+These writeups are based on real NCAE competition experience and consolidate knowledge from:
+
+- NCAE Cyber Games competition materials
+- Various Linux distribution documentation
+- Hands-on competition debugging and troubleshooting
+
+> [!NOTE]
+> The main repository is hosted on [tangled.org](https://tangled.org/dunkirk.sh/ncae-tools), with GitHub serving as a mirror.
+
+<p align="center">
+    <img src="https://raw.githubusercontent.com/taciturnaxolotl/carriage/master/.github/images/line-break.svg" />
+</p>
+
+<p align="center">
+    &copy 2025-present <a href="https://github.com/taciturnaxolotl">Kieran Klukas</a>
+</p>
+
+<p align="center">
+    <a href="https://github.com/taciturnaxolotl/ncae-tools/blob/main/LICENSE.md"><img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&logoColor=d9e0ee&colorA=363a4f&colorB=b7bdf8"/></a>
+</p>
