@@ -4,9 +4,9 @@
 
 ```
 External Network (172.20.0.0/16)
-├── Kali External: 172.20.2
+├── Kali External: 172.20.0.2
 ├── Router External: 172.20.<team>.1
-└── Scoring Server: 172.20.1
+└── Scoring Server: 172.20.0.1
 
 Internal Network (192.168.<team>.0/24)
 ├── Router Internal: 192.168.<team>.1
@@ -27,15 +27,13 @@ Internal Network (192.168.<team>.0/24)
 ### 1. Find Your Team Number
 
 **On Kali External**:
-```bash
-ip addr show                    # Look for 172.20.X
-# If you see 172.20.2, your team number is 2
-# Check scoreboard at http://172.20.1 for confirmation
-```
+
+Check scoreboard at http://172.20.1 for team number (username: `sandbox` pass: `password`).
 
 ### 2. Configure Router
 
 **Login to MikroTik** (via ProxMox console or SSH):
+
 ```bash
 # Default login
 admin
@@ -46,28 +44,26 @@ admin
 ```
 
 **Assign IP addresses**:
+
 ```bash
+/interface print
+
 # External interface
-/ip address add address=172.20.<team>.1/16 interface=ether3
+/ip address add address=172.20.<team>.1/16 interface=ether#
 
 # Internal interface
-/ip address add address=192.168.<team>.1/24 interface=ether4
+/ip address add address=192.168.<team>.1/24 interface=ether#
 
 # Verify
 /ip address print
 ```
 
-**Or use Web GUI**: `http://172.20.<team>.1:8080`
-- Login: `admin` / `<your password>`
-- Go to **Quick Set**
-- Enter external IP: `172.20.<team>.1/16`
-- Enter internal IP: `192.168.<team>.1/24`
-- ✅ **Check "Enable NAT"** (required!)
-- Click **Apply Configuration**
+The webgui can't be used here because there are no ip addresses assigned to it yet.
 
 ### 3. Configure Ubuntu Web Server
 
 **Assign static IP**:
+
 ```bash
 sudo nano /etc/netplan/01-network-manager-all.yaml
 ```
@@ -90,25 +86,28 @@ ip addr show                    # Verify IP
 ping 192.168.<team>.1          # Test router connectivity
 ```
 
+or open settings -> enable wired and config there
+
 **Start Apache**:
+
 ```bash
 sudo systemctl restart apache2
 sudo systemctl status apache2   # Should show "active (running)"
 ```
 
-**Test locally**:
 ```bash
-curl http://192.168.<team>.2    # Should return HTML
+sudo vi /var/www/html/index.html # change team number
 ```
 
 ### 4. Configure Port Forwarding (Router)
 
-**Web GUI Method** (recommended):
+**Web GUI**:
+
 ```
 http://172.20.<team>.1:8080
 ```
 
-1. Go to **Quick Set** → **Port Mapping**
+1. Go to **Quick Set** → **Port Mapping** (enable nat here and change gateway to `172.20.1.1`)
 2. Click **New**
    - Name: `www-tcp`
    - Protocol: `TCP`
@@ -126,6 +125,7 @@ http://172.20.<team>.1:8080
 ### 5. Test From External Network
 
 **On Kali External**:
+
 ```bash
 ping 172.20.<team>.1                    # Router should respond
 curl http://172.20.<team>.1             # Should show web content from internal server
@@ -135,38 +135,14 @@ curl http://172.20.<team>.1             # Should show web content from internal 
 
 All lights should be green!
 
-## Quick Troubleshooting
-
-| Problem | Check |
-|---------|-------|
-| Router not pingable | Verify IP on ether3: `/ip address print` |
-| Web not accessible | 1. Is Apache running? 2. Did you enable NAT? 3. Port forwarding rules exist? |
-| Internal server can't reach router | Check internal IP on ether4, verify gateway in netplan |
-| Lights still red | Wait 30 seconds for scoring refresh, check exact IPs match topology |
-
 ## Configuration Files Reference
 
 **Router**: Web GUI at `http://172.20.<team>.1:8080` or CLI via console
 
 **Ubuntu Web Server**:
+
 - Network: `/etc/netplan/01-network-manager-all.yaml`
 - Apache: `sudo systemctl restart apache2`
 - Website content: `/var/www/html/`
 
 **Kali Machines**: For testing only, no configuration needed
-
-## Common Mistakes
-
-❌ Forgot to enable NAT on router  
-❌ Port forwarding only has TCP rule (need UDP too)  
-❌ Wrong team number in IP addresses  
-❌ Apache not started on Ubuntu  
-❌ Netplan syntax error (YAML is whitespace-sensitive)  
-❌ Router interface names wrong (check with `interface print`)
-
-## Time-Saving Tips
-
-1. Use **web GUI for router** - faster than CLI for NAT/port forwarding
-2. Copy/paste team number once you know it - avoid typos
-3. Test each step before moving on (ping, curl, status checks)
-4. If stuck, verify each light's requirement on scoreboard
