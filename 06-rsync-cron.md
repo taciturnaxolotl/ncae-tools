@@ -1,36 +1,4 @@
-# DNS, Rsync, and Cron Services
-
-## DNS Service (BIND)
-
-### Service Name
-- `named` (most distributions)
-
-### Configuration Location
-- Ubuntu: `/etc/bind/`
-- CentOS: May be in different location
-
-### Check Service
-```bash
-systemctl status named
-```
-
-### Basic Concept
-DNS translates domain names to IP addresses (forward lookup) and IP addresses to domain names (reverse lookup).
-
-**Forward lookup**: `example.com` → `192.168.1.100`
-**Reverse lookup**: `192.168.1.100` → `example.com`
-
-### Key Files (Bind)
-- `named.conf` - Main configuration
-- Zone files - Define DNS records for domains
-
-**This is a complex service** - requires understanding of:
-- Zone files
-- DNS record types (A, PTR, CNAME, MX, etc.)
-- Forward vs reverse zones
-- DNS hierarchy
-
----
+# Rsync and Cron Services
 
 ## Rsync - File Synchronization/Backup
 
